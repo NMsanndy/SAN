@@ -18,3 +18,189 @@
 </body>
 </html> 
 
+"ConnectionStrings": {
+    "DefaultConnection": "Server=YOUR_SERVER;Database=DJBookingDB;Trusted_Connection=True;"
+}
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace DJBookingSystem.Models
+{
+    public class Booking
+    {
+        public int Id { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        [Required, EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        public string Mobile { get; set; }
+
+        [Required]
+        public DateTime EventDate { get; set; }
+
+        [Required]
+        public TimeSpan StartTime { get; set; }
+
+        [Required]
+        public TimeSpan EndTime { get; set; }
+
+        [Required]
+        public string EventType { get; set; }
+
+        [Required]
+        public string Venue { get; set; }
+
+        public string AdditionalInfo { get; set; }
+    }
+}
+using Microsoft.EntityFrameworkCore;
+
+namespace DJBookingSystem.Models
+{
+    public class ApplicationDbContext : DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+
+        public DbSet<Booking> Bookings { get; set; }
+    }
+}
+using Microsoft.EntityFrameworkCore;
+using DJBookingSystem.Models;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var app = builder.Build();
+
+app.UseRouting();
+app.UseStaticFiles();
+app.UseAuthorization();
+app.MapDefaultControllerRoute();
+app.Run();
+using Microsoft.AspNetCore.Mvc;
+using DJBookingSystem.Models;
+
+namespace DJBookingSystem.Controllers
+{
+    public class BookingController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+
+        public BookingController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Create(Booking booking)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Bookings.Add(booking);
+                _context.SaveChanges();
+                return RedirectToAction("Success");
+            }
+            return View("Index", booking);
+        }
+
+        public IActionResult Success()
+        {
+            return View();
+        }
+    }
+}
+@model DJBookingSystem.Models.Booking
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Book Your DJ</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff00ff, #ff6600);
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .btn-book {
+            background: #ffcc00;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center">🎵 Book Your DJ Now 🎧</h2>
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label>Name:</label>
+                <input asp-for="Name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Email:</label>
+                <input asp-for="Email" type="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Mobile:</label>
+                <input asp-for="Mobile" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Event Date:</label>
+                <input asp-for="EventDate" type="date" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Start Time:</label>
+                <input asp-for="StartTime" type="time" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>End Time:</label>
+                <input asp-for="EndTime" type="time" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Event Type:</label>
+                <input asp-for="EventType" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Venue Address:</label>
+                <input asp-for="Venue" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Additional Info:</label>
+                <textarea asp-for="AdditionalInfo" class="form-control"></textarea>
+            </div>
+            <button type="submit" class="btn btn-book w-100">Book Now</button>
+        </form>
+    </div>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Booking Success</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body style="background-color: #ffcc00; text-align: center;">
+    <h1>🎉 Booking Confirmed! 🎶</h1>
+    <p>Thank you for booking a DJ. We'll contact you soon.</p>
+    <a href="/Booking/Index" class="btn btn-dark">Book Another</a>
+</body>
+</html>
